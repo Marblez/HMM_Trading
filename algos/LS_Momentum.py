@@ -65,7 +65,7 @@ class LongShortMomentum(QCAlgorithm):
         # rank stocks by three factor.
         sortedByfactor = sorted(filtered_fine, key=lambda x: x.ValuationRatios.PriceChange1M, reverse=True)
         sortedByfactor = sortedByfactor[self.winsorize:]
-        sortedByfactor = sortedByfactor[:self.winsorize]
+        sortedByfactor = sortedByfactor[:len(sortedByfactor)-self.winsorize]
         stock_dict = {}
 
         # assign a score to each stock, you can also change the rule of scoring here.

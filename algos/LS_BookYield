@@ -1,6 +1,6 @@
 from QuantConnect.Data.UniverseSelection import *
 
-class LongShortBookValue(QCAlgorithm):
+class LongShortBookYield(QCAlgorithm):
 
     def __init__(self):
     # set the flag for rebalance
@@ -18,7 +18,7 @@ class LongShortBookValue(QCAlgorithm):
     def Initialize(self):
         self.SetWarmup(timedelta(20))
         self.SetCash(100000)
-        self.SetStartDate(2014, 12, 1)
+        self.SetStartDate(2014, 12,1)
         self.SetEndDate(2017, 10, 1)
         #self.SetEndDate(2016,12,5)
 
@@ -60,10 +60,10 @@ class LongShortBookValue(QCAlgorithm):
     # drop stocks which don't have the information we need.
     # you can try replacing those factor with your own factors here
 
-        filtered_fine = [x for x in fine if x.ValuationRatios.BookValuePerShare]
+        filtered_fine = [x for x in fine if x.ValuationRatios.BookValueYield]
 
         # rank stocks by three factor.
-        sortedByfactor = sorted(filtered_fine, key=lambda x: x.ValuationRatios.BookValuePerShare, reverse=True)
+        sortedByfactor = sorted(filtered_fine, key=lambda x: x.ValuationRatios.BookValueYield, reverse=True)
         sortedByfactor = sortedByfactor[self.winsorize:]
         sortedByfactor = sortedByfactor[:len(sortedByfactor)-self.winsorize]
         stock_dict = {}
@@ -77,7 +77,7 @@ class LongShortBookValue(QCAlgorithm):
         self.sorted_stock = sorted(stock_dict.items(), key=lambda d:d[1],reverse=False)
         sorted_symbol = [x[0] for x in self.sorted_stock]
 
-        # sotre the top stocks into the long_list and the bottom ones into the short_list
+        # sort the top stocks into the long_list and the bottom ones into the short_list
         self.long = [x.Symbol for x in sorted_symbol[:self.num_fine]]
         self.short = [x.Symbol for x in sorted_symbol[-self.num_fine:]]
 

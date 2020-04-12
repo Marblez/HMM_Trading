@@ -18,9 +18,8 @@ class LongShortMultifactor(QCAlgorithm):
     def Initialize(self):
         self.SetWarmup(timedelta(20))
         self.SetCash(100000)
-        self.SetStartDate(2006,12,1)
-        self.SetEndDate(2010, 12, 31)
-        #self.SetEndDate(2016,12,5)
+        self.SetStartDate(2014, 12, 1)
+        self.SetEndDate(2017, 10, 1)
 
         self.spy = self.AddEquity("SPY", Resolution.Daily).Symbol
 
@@ -62,14 +61,12 @@ class LongShortMultifactor(QCAlgorithm):
 
         filtered_fine = [x for x in fine if x.OperationRatios.OperationMargin.Value
                                         and x.ValuationRatios.PriceChange1M
-                                        and x.ValuationRatios.BookValuePerShare]
-
-        self.Log('remained to select %d'%(len(filtered_fine)))
+                                        and x.ValuationRatios.BookValueYield]
 
         # rank stocks by three factor.
         sortedByfactor1 = sorted(filtered_fine, key=lambda x: x.OperationRatios.OperationMargin.Value, reverse=True)
         sortedByfactor2 = sorted(filtered_fine, key=lambda x: x.ValuationRatios.PriceChange1M, reverse=True)
-        sortedByfactor3 = sorted(filtered_fine, key=lambda x: x.ValuationRatios.BookValuePerShare, reverse=True)
+        sortedByfactor3 = sorted(filtered_fine, key=lambda x: x.ValuationRatios.BookValueYield, reverse=True)
 
         stock_dict = {}
 
@@ -78,7 +75,7 @@ class LongShortMultifactor(QCAlgorithm):
             rank1 = i
             rank2 = sortedByfactor2.index(ele)
             rank3 = sortedByfactor3.index(ele)
-            score = sum([rank1*0.2,rank2*0.4,rank3*0.4])
+            score = sum([rank1*0.3,rank2*0.3,rank3*0.4])
             stock_dict[ele] = score
 
         # sort the stocks by their scores

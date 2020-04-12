@@ -1,12 +1,13 @@
 from QuantConnect.Data.UniverseSelection import *
 
-class LongShortBookValue(QCAlgorithm):
+# Beta values are 2, 4 and 4
+class LongShortFamaFrench(QCAlgorithm):
 
     def __init__(self):
-    # set the flag for rebalance
+    # Rebalance flag
         self.reb = 1
     # Number of stocks to pass CoarseSelection process
-        self.num_coarse = 500
+        self.num_coarse = 300
     # Number of stocks to long/short
         self.winsorize = 10
         self.num_fine = 50
@@ -60,24 +61,30 @@ class LongShortBookValue(QCAlgorithm):
     # drop stocks which don't have the information we need.
     # you can try replacing those factor with your own factors here
 
-        filtered_fine = [x for x in fine if x.ValuationRatios.BookValuePerShare]
+        filtered_fine = [x for x in fine if x.OperationRatios.OperationMargin.Value
+                                        and x.ValuationRatios.PriceChange1M
+                                        and x.ValuationRatios.BookValuePerShare]
 
         # rank stocks by three factor.
-        sortedByfactor = sorted(filtered_fine, key=lambda x: x.ValuationRatios.BookValuePerShare, reverse=True)
-        sortedByfactor = sortedByfactor[self.winsorize:]
-        sortedByfactor = sortedByfactor[:len(sortedByfactor)-self.winsorize]
+        sortedByfactor1 = sorted(filtered_fine, key=lambda x: x.ValuationRatios.PriceChange1M, reverse=True)
+        sortedByfactor2 = sorted(filtered_fine, key=lambda x: x.ValuationRatios.BookValueYield, reverse=True)
+        sortedByfactor3 = sorted(filtered_fine, key=lambda x: x.ValuationRatios.BookValuePerShare, reverse=False)
+
         stock_dict = {}
 
-        # assign a score to each stock, you can also change the rule of scoring here.
-        for i,ele in enumerate(sortedByfactor):
-            rank = i
-            stock_dict[ele] = rank
+        # assign a score to each stock (ranking process)
+        for i,ele in enumerate(sortedByfactor1):
+            rank1 = i
+            rank2 = sortedByfactor2.index(ele)
+            rank3 = sortedByfactor3.index(ele)
+            score = sum([rank1*0.2,rank2*0.4,rank3*0.4])
+            stock_dict[ele] = score
 
         # sort the stocks by their scores
         self.sorted_stock = sorted(stock_dict.items(), key=lambda d:d[1],reverse=False)
         sorted_symbol = [x[0] for x in self.sorted_stock]
 
-        # sotre the top stocks into the long_list and the bottom ones into the short_list
+        # sort the top stocks into the long_list and the bottom ones into the short_list
         self.long = [x.Symbol for x in sorted_symbol[:self.num_fine]]
         self.short = [x.Symbol for x in sorted_symbol[-self.num_fine:]]
 

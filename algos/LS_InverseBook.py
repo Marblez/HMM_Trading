@@ -1,12 +1,12 @@
 from QuantConnect.Data.UniverseSelection import *
 
-class LongShortBookValue(QCAlgorithm):
+class LongShortInverseBookValue(QCAlgorithm):
 
     def __init__(self):
     # set the flag for rebalance
         self.reb = 1
     # Number of stocks to pass CoarseSelection process
-        self.num_coarse = 500
+        self.num_coarse = 300
     # Number of stocks to long/short
         self.winsorize = 10
         self.num_fine = 50
@@ -18,8 +18,8 @@ class LongShortBookValue(QCAlgorithm):
     def Initialize(self):
         self.SetWarmup(timedelta(20))
         self.SetCash(100000)
-        self.SetStartDate(2014, 12, 1)
-        self.SetEndDate(2017, 10, 1)
+        self.SetStartDate(2010,12,1)
+        self.SetEndDate(2014, 12, 31)
         #self.SetEndDate(2016,12,5)
 
         self.spy = self.AddEquity("SPY", Resolution.Daily).Symbol
@@ -74,12 +74,12 @@ class LongShortBookValue(QCAlgorithm):
             stock_dict[ele] = rank
 
         # sort the stocks by their scores
-        self.sorted_stock = sorted(stock_dict.items(), key=lambda d:d[1],reverse=False)
+        self.sorted_stock = sorted(stock_dict.items(), key=lambda d:d[1], reverse=False)
         sorted_symbol = [x[0] for x in self.sorted_stock]
 
-        # sotre the top stocks into the long_list and the bottom ones into the short_list
-        self.long = [x.Symbol for x in sorted_symbol[:self.num_fine]]
-        self.short = [x.Symbol for x in sorted_symbol[-self.num_fine:]]
+        # sort the top stocks into the long_list and the bottom ones into the short_list
+        self.long = [x.Symbol for x in sorted_symbol[-self.num_fine:]]
+        self.short = [x.Symbol for x in sorted_symbol[:self.num_fine]]
 
         return self.long + self.short
 
