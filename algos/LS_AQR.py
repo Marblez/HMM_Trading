@@ -82,7 +82,7 @@ class LongShortMultifactor(QCAlgorithm):
         self.sorted_stock = sorted(stock_dict.items(), key=lambda d:d[1],reverse=False)
         sorted_symbol = [x[0] for x in self.sorted_stock]
 
-        # sotre the top stocks into the long_list and the bottom ones into the short_list
+        # sort the top stocks into the long_list and the bottom ones into the short_list
         self.long = [x.Symbol for x in sorted_symbol[:self.num_fine]]
         self.short = [x.Symbol for x in sorted_symbol[-self.num_fine:]]
 
