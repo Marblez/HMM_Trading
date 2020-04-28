@@ -96,7 +96,6 @@ class LongShortBookValue(QCAlgorithm):
     # Liquidate all stocks at end of month
         self.Liquidate()
 
-    # Assign each stock equally. Alternatively you can design your own portfolio construction method
         for i in self.long:
             self.SetHoldings(i, 0.9/self.num_fine)
 

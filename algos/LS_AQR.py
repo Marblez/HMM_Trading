@@ -3,7 +3,7 @@ from QuantConnect.Data.UniverseSelection import *
 class LongShortMultifactor(QCAlgorithm):
 
     def __init__(self):
-    # set the flag for rebalance
+    # Set rebalance flag
         self.reb = 1
     # Number of stocks to pass CoarseSelection process
         self.num_coarse = 300
@@ -101,7 +101,6 @@ class LongShortMultifactor(QCAlgorithm):
     # Liquidate all stocks at end of month
         self.Liquidate()
 
-    # Assign each stock equally. Alternatively you can design your own portfolio construction method
         for i in self.long:
             self.SetHoldings(i, 0.9/self.num_fine)
 
