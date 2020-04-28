@@ -18,7 +18,6 @@ class HMMHybrid(QCAlgorithm):
         spy = self.AddEquity("SPY", Resolution.Daily)
         self.SetWarmup(timedelta(20))
         self.SetStartDate(2017, 8, 30)
-        #self.SetEndDate(2018, 2, 21)
         self.SetCash(100000)
         self.Schedule.On(self.DateRules.EveryDay(), self.TimeRules.BeforeMarketClose("SPY"), self.MarketClose)
         self.Schedule.On(self.DateRules.EveryDay(), self.TimeRules.At(8, 0), self.set)
@@ -56,10 +55,7 @@ class HMMHybrid(QCAlgorithm):
         return [i.Symbol for i in top]
 
     def FineSelectionFunction(self, fine):
-        # FINE FILTERING FOR FRENCH STOCKS
-
-        # drop stocks which don't have the information we need.
-        # you can try replacing those factor with your own factors here
+        # FINE FILTERING FOR FAMA FRENCH STOCKS
 
         filtered_fine = [x for x in fine if x.OperationRatios.OperationMargin.Value
                                         and x.ValuationRatios.PriceChange1M
@@ -181,10 +177,6 @@ class HMMHybrid(QCAlgorithm):
         hidden_states = 3;
         em_iterations = 75;
         data_length = 3356;
-        # num_models = 7;
-
-        #history = self.History("SPY", 2718, Resolution.Daily)
-        #prices = list(history.loc["SPY"]['close'])
 
         history = self.History(self.symbols, 2718, Resolution.Daily)
         for symbol in self.symbols:
@@ -268,9 +260,7 @@ class HMMHybrid(QCAlgorithm):
             ret_dist.Fit(regime_ret[i])
             rets.append(ret_dist.PDF(Return[-1]))
 
-        # > 0.5 Low-Pass Filter
-        #print(vols[today_regime] / sum(vols))
-        #print(rets[today_regime] / sum(rets))
+        # Low-Pass Filter
         bear = -1
         bull = -1
         neg_return = 1

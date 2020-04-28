@@ -59,7 +59,6 @@ class LongShortFamaFrench(QCAlgorithm):
         self.reb = 0
 
     # drop stocks which don't have the information we need.
-    # you can try replacing those factor with your own factors here
 
         filtered_fine = [x for x in fine if x.OperationRatios.OperationMargin.Value
                                         and x.ValuationRatios.PriceChange1M
