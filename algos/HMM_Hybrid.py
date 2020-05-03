@@ -11,16 +11,12 @@ class HMMHybrid(QCAlgorithm):
 
     def Initialize(self):
         #Switch value for each regime
-        self.next = 'neutral'
         self.switch = 'neutral'
         self.AddUniverse(self.CoarseSelectionFunction, self.FineSelectionFunction)
-        self.UniverseSettings.Resolution = Resolution.Minute
-        spy = self.AddEquity("SPY", Resolution.Daily)
-        self.SetWarmup(timedelta(20))
+        spy = self.AddEquity("SPY", Resolution.Minute)
         self.SetStartDate(2017, 8, 30)
         self.SetCash(100000)
-        self.Schedule.On(self.DateRules.EveryDay(), self.TimeRules.BeforeMarketClose("SPY"), self.MarketClose)
-        self.Schedule.On(self.DateRules.EveryDay(), self.TimeRules.At(8, 0), self.set)
+        #self.Schedule.On(self.DateRules.EveryDay(), self.TimeRules.BeforeMarketClose("SPY"), self.MarketClose)
         self.Schedule.On(self.DateRules.MonthStart("SPY"), \
                  self.TimeRules.AfterMarketOpen("SPY"), \
                  self.Reset)
@@ -44,9 +40,6 @@ class HMMHybrid(QCAlgorithm):
         else:
             self.GrowthModel()
 
-    def set(self):
-        self.next = self.train()
-
     def CoarseSelectionFunction(self, coarse):
         CoarseWithFundamental = [x for x in coarse if x.HasFundamentalData and (float(x.Price)>1)]
 
@@ -55,7 +48,10 @@ class HMMHybrid(QCAlgorithm):
         return [i.Symbol for i in top]
 
     def FineSelectionFunction(self, fine):
-        # FINE FILTERING FOR FAMA FRENCH STOCKS
+        # FINE FILTERING FOR FRENCH STOCKS
+
+        # drop stocks which don't have the information we need.
+        # you can try replacing those factor with your own factors here
 
         filtered_fine = [x for x in fine if x.OperationRatios.OperationMargin.Value
                                         and x.ValuationRatios.PriceChange1M
@@ -124,20 +120,21 @@ class HMMHybrid(QCAlgorithm):
         pass
 
     def rebalance(self):
+        next = self.next = self.train()
         if self.Portfolio.TotalHoldingsValue == 0:
-            self.switch = self.next
+            self.switch = next
             if self.switch == 'bear':
                 self.FamaFrench()
             else:
                 self.GrowthModel()
             return
 
-        if self.next == self.switch:
+        if next == self.switch:
             return
 
-        self.switch = self.next
+        self.switch = next
 
-        if self.next  == 'neutral':
+        if next == 'neutral':
             return
 
         # Assign each stock equally.
@@ -147,7 +144,7 @@ class HMMHybrid(QCAlgorithm):
             self.GrowthModel()
 
     def FamaFrench(self):
-        self.Log("Fama French")
+        #self.Log("Fama French")
         for kvp in self.Portfolio:
             if kvp.Value.Invested and not (kvp.Key in self.french_long or kvp.Key in self.french_short):
                 self.SetHoldings(kvp.Key, 0)
@@ -157,7 +154,7 @@ class HMMHybrid(QCAlgorithm):
             self.SetHoldings(i, -1/self.num_fine)
 
     def GrowthModel(self):
-        self.Log("Growth Model")
+        #self.Log("Growth Model")
         for kvp in self.Portfolio:
             if kvp.Value.Invested and not kvp.Key in self.growth_long:
                 self.SetHoldings(kvp.Key, 0)
@@ -168,7 +165,7 @@ class HMMHybrid(QCAlgorithm):
     def MarketClose(self):
         self.daily_return = 100*((self.Portfolio.TotalPortfolioValue - self.prev_value)/self.prev_value)
         self.prev_value = self.Portfolio.TotalPortfolioValue
-        #self.Log(self.daily_return)
+        self.Log(self.daily_return)
         #self.Log("Switch: {}".format(self.switch))
         return
 
@@ -177,6 +174,10 @@ class HMMHybrid(QCAlgorithm):
         hidden_states = 3;
         em_iterations = 75;
         data_length = 3356;
+        # num_models = 7;
+
+        #history = self.History("SPY", 2718, Resolution.Daily)
+        #prices = list(history.loc["SPY"]['close'])
 
         history = self.History(self.symbols, 2718, Resolution.Daily)
         for symbol in self.symbols:
@@ -260,7 +261,7 @@ class HMMHybrid(QCAlgorithm):
             ret_dist.Fit(regime_ret[i])
             rets.append(ret_dist.PDF(Return[-1]))
 
-        # Low-Pass Filter
+        # > 0.5 Low-Pass Filter
         bear = -1
         bull = -1
         neg_return = 1
